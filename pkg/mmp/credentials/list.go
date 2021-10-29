@@ -1,26 +1,14 @@
 package credentials
 
 import (
-	"context"
-
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	v1 "github.com/nlamot/sofibot/pkg/k8s/core/v1"
 	restclient "k8s.io/client-go/rest"
 )
 
-func List(config *restclient.Config) ([]string, error) {
-	clientset, err := kubernetes.NewForConfig(config)
+func List(config *restclient.Config, namespace string) ([]string, error) {
+	secret, err := v1.GetSecret(config, namespace, "mmp-credentials") // mmp-credentials should be configurable
 	if err != nil {
-		panic(err.Error())
+		return nil, err
 	}
-	secret, err := clientset.CoreV1().Secrets("default").Get(context.Background(), "mmp-credentials", v1.GetOptions{})
-	if err != nil {
-		panic(err.Error())
-	}
-	keys := make([]string, 0, len(secret.Data))
-	for k := range secret.Data {
-		keys = append(keys, k)
-	}
-	
-	return keys, nil
+	return secret.GetKeys(), nil
 }

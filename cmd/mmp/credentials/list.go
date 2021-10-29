@@ -29,7 +29,10 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			panic(err.Error())
 		}
-		r, _ := credentials.List(config)
+		r, err := credentials.List(config, "default") // default should be configurable
+		if err != nil {
+			fmt.Println(err)
+		}
 		for _, element := range r {
 			fmt.Println(element)
 		}

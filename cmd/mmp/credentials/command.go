@@ -15,4 +15,5 @@ var (
 
 func init() {
 	Cmd.AddCommand(listCmd)
+	Cmd.AddCommand(updateCmd)
 }
