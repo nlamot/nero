@@ -29,7 +29,7 @@ var updateCmd = &cobra.Command{
 		if err != nil {
 			panic(err.Error())
 		}
-		err = credentials.Update(config, "default", "test", "testje")
+		err = credentials.Update(config, "dev-mri", "test", "testje")
 		if err != nil {
 			fmt.Println(err)
 		} else {
