@@ -26,7 +26,7 @@ func GetSecret(config *restclient.Config, namespace string, name string) (*Secre
 	return MapSecret(secret), nil
 }
 
-func SealSecret(secret *Secret) ([]byte, error) {
+func (secret *Secret) Seal() ([]byte, error) {
 	data, err := yaml.Marshal(secret)
 	if err != nil {
 		return nil, err

@@ -7,17 +7,17 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/nlamot/sofibot/cmd/mmp"
+	"github.com/nlamot/nero/cmd/mmp"
 )
 
 var (
 	// Used for flags.
-	cfgFile     string
+	cfgFile string
 
 	rootCmd = &cobra.Command{
-		Use:   "sofibot",
-		Short: "Sofico administrative bot ",
-		Long: `Sofibot automates administrative actions for Miles`,
+		Use:   "nero",
+		Short: "GitOps administrative bot ",
+		Long:  `Nero automates administrative actions for GitOps environments`,
 	}
 )
 
@@ -29,7 +29,7 @@ func Execute() error {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.sofibot.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.nero.yaml)")
 
 	rootCmd.AddCommand(mmp.Cmd)
 }
@@ -43,10 +43,10 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in home directory with name ".sofibot" (without extension).
+		// Search config in home directory with name ".nero" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".sofibot")
+		viper.SetConfigName(".nero")
 	}
 
 	viper.AutomaticEnv()

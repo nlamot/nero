@@ -1,7 +1,7 @@
 package credentials
 
 import (
-	v1 "github.com/nlamot/sofibot/pkg/k8s/core/v1"
+	v1 "github.com/nlamot/nero/pkg/k8s/core/v1"
 	restclient "k8s.io/client-go/rest"
 )
 

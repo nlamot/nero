@@ -1,6 +1,6 @@
 package main
 
-import "github.com/nlamot/sofibot/cmd"
+import "github.com/nlamot/nero/cmd"
 
 func main() {
 	cmd.Execute()

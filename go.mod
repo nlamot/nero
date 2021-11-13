@@ -1,4 +1,4 @@
-module github.com/nlamot/sofibot
+module github.com/nlamot/nero
 
 go 1.16
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/nlamot/sofibot/pkg/mmp/credentials"
+	"github.com/nlamot/nero/pkg/mmp/credentials"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"

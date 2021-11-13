@@ -2,15 +2,11 @@ package credentials
 
 import (
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	restclient "k8s.io/client-go/rest"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	v1 "github.com/nlamot/sofibot/pkg/k8s/core/v1"
+	"github.com/nlamot/nero/pkg/git"
+	v1 "github.com/nlamot/nero/pkg/k8s/core/v1"
 )
 
 func Update(clientConfig *restclient.Config, namespace string, key string, value string) error {
@@ -20,100 +16,41 @@ func Update(clientConfig *restclient.Config, namespace string, key string, value
 	}
 	secret.Update(key, value)
 
-	sealedSecret, err := v1.SealSecret(secret)
+	sealedSecret, err := secret.Seal()
 	if err != nil {
 		return err
 	}
 
-	var repo *git.Repository
-	publicKeys, err := ssh.NewSSHAgentAuth("git")
+	// Setup local gitops configuration
+	repo, err := git.InitRepo("clt-config", "git@bitbucket.org:sofico/clt-config.git")
 	if err != nil {
 		return err
 	}
-	if _, err := os.Stat("/tmp/clt-config"); os.IsNotExist(err) {
-		repo, err = git.PlainClone("/tmp/clt-config", false, &git.CloneOptions{
-			Auth:     publicKeys,
-			URL:      "git@bitbucket.org:sofico/clt-config.git",
-			Progress: os.Stdout,
-		})
-		if err != nil {
-			return err
-		}
-	} else {
-		repo, err = git.PlainOpenWithOptions("/tmp/clt-config", &git.PlainOpenOptions{
-			DetectDotGit: true,
-		})
-		if err != nil {
-			return err
-		}
-	}
-	branch := fmt.Sprintf("refs/heads/%s", "nero-test")
-	b := plumbing.ReferenceName(branch)
-	refs, _ := repo.Branches()
-	worktree, _ := repo.Worktree()
-	exists := false
-	refs.ForEach(func(r *plumbing.Reference) error {
-		if r.Name() == b {
-			exists = true
-			return nil
-		}
-		return nil
-	})
-	if exists {
-		err = worktree.Checkout(&git.CheckoutOptions{
-			Branch: b,
-			Force:  true,
-		})
-		if err != nil {
-			return err
-		}
-		worktree.Pull(&git.PullOptions{
-			Force: true,
-		})
-	} else {
-		worktree.Checkout(&git.CheckoutOptions{
-			Branch: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", "master")),
-			Force:  true,
-		})
-		fmt.Println("checkout")
-		worktree.Pull(&git.PullOptions{
-			Force: true,
-		})
-		fmt.Println("pull")
-		err = worktree.Checkout(&git.CheckoutOptions{
-			Branch: b,
-			Create: true,
-		})
-		if err != nil {
-			return err
-		}
-	}
+	// Create branch to work on
+	err = repo.CreateFeatureBranch("nero-test")
 	if err != nil {
 		return err
 	}
-	fmt.Println("worktree")
-	
-	fmt.Println("checkout nero-test")
-	ioutil.WriteFile(fmt.Sprintf("/tmp/clt-config/env/%s/general-config/mmp-credentials.yaml", namespace), sealedSecret, 0633)
-	fmt.Println("writefile")
-	worktree.Add(fmt.Sprintf("env/%s/general-config/mmp-credentials.yaml", namespace))
-	fmt.Println("add")
-	worktree.Commit("Nero test", &git.CommitOptions{})
-	fmt.Println("commit")
-	err = repo.Push(&git.PushOptions{
-		Auth: publicKeys,
+
+	// Update mmp-credentials & get URL to create PR
+	err = repo.StageChanges([]git.GitRepoChange{
+		{
+			Path: fmt.Sprintf("env/%s/general-config/mmp-credentials.yaml", namespace),
+			Data: sealedSecret,
+		},
 	})
 	if err != nil {
 		return err
 	}
-	fmt.Println("push")
-	err = worktree.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", "master")),
-	})
+	_, err = repo.CommitAndPushStagedChanges("Test")
 	if err != nil {
 		return err
 	}
-	fmt.Println("checkout master")
+	// Return to master state
+	err = repo.Checkout("master", true)
+	if err != nil {
+		return err
+	}
 
 	return err
 }
