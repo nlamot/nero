@@ -12,11 +12,12 @@ import (
 )
 
 type GitRepo struct {
-	url       string
-	localPath string
-	repo      *git.Repository
-	auth      *ssh.PublicKeysCallback
-	worktree  *git.Worktree
+	url        string
+	localPath  string
+	mainBranch string
+	repo       *git.Repository
+	auth       *ssh.PublicKeysCallback
+	worktree   *git.Worktree
 }
 
 type GitRepoChange struct {
@@ -24,11 +25,12 @@ type GitRepoChange struct {
 	Data []byte
 }
 
-func InitRepo(name string, url string) (*GitRepo, error) {
+func InitRepo(name string, url string, mainBranch string) (*GitRepo, error) {
 	fmt.Printf("Setting up repo %s", name)
 	g := &GitRepo{
-		localPath: fmt.Sprintf("/tmp/%s", name), // clt-config
-		url:       url,                          // "git@bitbucket.org:sofico/clt-config.git"
+		localPath:  fmt.Sprintf("/tmp/%s", name), // clt-config
+		url:        url,                          // "git@bitbucket.org:sofico/clt-config.git"
+		mainBranch: mainBranch,                   // master
 	}
 	var err error
 	g.auth, err = ssh.NewSSHAgentAuth("git")
@@ -126,6 +128,10 @@ func (g *GitRepo) Checkout(branch string, force bool) error {
 		return nil
 	}
 	return err
+}
+
+func (g *GitRepo) CheckoutMain(force bool) error {
+	return g.Checkout(g.mainBranch, force)
 }
 
 func (g *GitRepo) HasBranch(name string) bool {

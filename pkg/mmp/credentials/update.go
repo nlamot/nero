@@ -22,7 +22,7 @@ func Update(clientConfig *restclient.Config, namespace string, key string, value
 	}
 
 	// Setup local gitops configuration
-	repo, err := git.InitRepo("clt-config", "git@bitbucket.org:sofico/clt-config.git")
+	repo, err := git.InitRepo("clt-config", "git@bitbucket.org:sofico/clt-config.git", "master")
 	if err != nil {
 		return err
 	}
